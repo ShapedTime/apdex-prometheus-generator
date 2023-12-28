@@ -2,31 +2,42 @@ package main
 
 import (
 	"apdex-rule-generator/config"
+	"embed"
+	"flag"
 	"os"
 	"text/template"
 )
 
+//go:embed rule-template.yml
+var ruleTemplate embed.FS
+
 func main() {
+	// Define flags for the config and output file paths
+	configPath := flag.String("config", "config.yml", "path to the configuration file")
+	outputPath := flag.String("output", "output.yml", "path to the output file")
+	flag.Parse()
 
-	tmpFile := "rule-template.yml"
-
-	tmpl, err := template.New(tmpFile).ParseFiles(tmpFile)
+	// Access the embedded rule-template.yml
+	tmpl, err := template.New("rule-template.yml").ParseFS(ruleTemplate, "rule-template.yml")
 	if err != nil {
 		panic(err)
 	}
 
-	cfg, err := config.ReadConfig("config.yml")
+	// Read configuration from the specified path
+	cfg, err := config.ReadConfig(*configPath)
 	if err != nil {
 		panic(err)
 	}
 
-	output, err := os.Create("output.yml")
+	// Create output file at the specified path
+	output, err := os.Create(*outputPath)
 	if err != nil {
 		panic(err)
 	}
 	defer output.Close()
 
-	err = tmpl.ExecuteTemplate(output, tmpFile, cfg)
+	// Execute the template with the configuration and write to the output file
+	err = tmpl.Execute(output, cfg)
 	if err != nil {
 		panic(err)
 	}
