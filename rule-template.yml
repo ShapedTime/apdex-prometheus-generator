@@ -1,0 +1,65 @@
+{{- /*gotype: config/config.Config*/ -}}
+groups:
+  {{- range .Apdexes}}
+  {{- $currentApdex := . }}
+  - name: {{$currentApdex.Name}}-{{$currentApdex.System}}-{{$currentApdex.Subsystem}}-apdex-rules
+    rules:
+      {{- range $window := $currentApdex.Windows}}
+      - record: apdex:good:{{$window}}:sum
+        expr: sum(increase({{$currentApdex.GoodBucket}}[{{$window}}]))
+        labels:
+          id: {{$currentApdex.Name}}-{{$currentApdex.System}}-{{$currentApdex.Subsystem}}-apdex-rules
+          system: {{$currentApdex.System}}
+          {{- if ne $currentApdex.Subsystem ""}}
+          subsystem: {{$currentApdex.Subsystem}}
+          {{- end}}
+          name: {{$currentApdex.Name}}
+          {{- range $k, $v := $currentApdex.ExtraLabels}}
+          {{- if ne $v ""}}
+          {{$k}}: {{$v}}
+          {{- end}}
+          {{- end}}
+      - record: apdex:tolerating:{{$window}}:sum
+        expr: sum(increase({{$currentApdex.ToleratingBucket}}[{{$window}}])) - on() apdex:good:{{$window}}:sum{id="{{$currentApdex.Name}}-{{$currentApdex.System}}-{{$currentApdex.Subsystem}}-apdex-rules"}
+        labels:
+          id: {{$currentApdex.Name}}-{{$currentApdex.System}}-{{$currentApdex.Subsystem}}-apdex-rules
+          system: {{$currentApdex.System}}
+          {{- if ne $currentApdex.Subsystem ""}}
+          subsystem: {{$currentApdex.Subsystem}}
+          {{- end}}
+          name: {{$currentApdex.Name}}
+          {{- range $k, $v := $currentApdex.ExtraLabels}}
+          {{- if ne $v ""}}
+          {{$k}}: {{$v}}
+          {{- end}}
+          {{- end}}
+      - record: apdex:total:{{$window}}:sum
+        expr: sum(increase({{$currentApdex.Total}}[{{$window}}]))
+        labels:
+          id: {{$currentApdex.Name}}-{{$currentApdex.System}}-{{$currentApdex.Subsystem}}-apdex-rules
+          system: {{$currentApdex.System}}
+          {{- if ne $currentApdex.Subsystem ""}}
+          subsystem: {{$currentApdex.Subsystem}}
+          {{- end}}
+          name: {{$currentApdex.Name}}
+          {{- range $k, $v := $currentApdex.ExtraLabels}}
+          {{- if ne $v ""}}
+          {{$k}}: {{$v}}
+          {{- end}}
+          {{- end}}
+      - record: apdex:{{$window}}
+        expr: (apdex:good:{{$window}}:sum{id="{{$currentApdex.Name}}-{{$currentApdex.System}}-{{$currentApdex.Subsystem}}-apdex-rules"} + on() apdex:tolerating:{{$window}}:sum{id="{{$currentApdex.Name}}-{{$currentApdex.System}}-{{$currentApdex.Subsystem}}-apdex-rules"} / on() 2) / on() apdex:total:{{$window}}:sum{id="{{$currentApdex.Name}}-{{$currentApdex.System}}-{{$currentApdex.Subsystem}}-apdex-rules"}
+        labels:
+          id: {{$currentApdex.Name}}-{{$currentApdex.System}}-{{$currentApdex.Subsystem}}-apdex-rules
+          system: {{$currentApdex.System}}
+          {{- if ne $currentApdex.Subsystem ""}}
+          subsystem: {{$currentApdex.Subsystem}}
+          {{- end}}
+          name: {{$currentApdex.Name}}
+          {{- range $k, $v := $currentApdex.ExtraLabels}}
+          {{- if ne $v ""}}
+          {{$k}}: {{$v}}
+          {{- end}}
+          {{- end}}
+      {{- end}}
+  {{- end}}
