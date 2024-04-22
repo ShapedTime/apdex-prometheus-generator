@@ -50,18 +50,18 @@ groups:
       - record: apdex:{{$window}}
         expr: |
           (
-            (sum(increase({{$currentApdex.GoodBucket}}[{{$window}}])) or on() vector(0)) 
+            (sum(increase(apdex:good:bucket{id="{{$currentApdex.Name}}-{{$currentApdex.System}}-{{$currentApdex.Subsystem}}-apdex-rules"}[{{$window}}])) or on() vector(0)) 
             + on()
             (
-              (sum(increase({{$currentApdex.ToleratingBucket}}[{{$window}}])) or on() vector(0))
+              (sum(increase(apdex:tolerating_and_good:bucket{id="{{$currentApdex.Name}}-{{$currentApdex.System}}-{{$currentApdex.Subsystem}}-apdex-rules"}[{{$window}}])) or on() vector(0))
               - on()
-              (sum(increase({{$currentApdex.GoodBucket}}[{{$window}}])) or on() vector(0))
+              (sum(increase(apdex:good:bucket{id="{{$currentApdex.Name}}-{{$currentApdex.System}}-{{$currentApdex.Subsystem}}-apdex-rules"}[{{$window}}])) or on() vector(0))
             )
             / on()
             2
           ) 
           / on()
-          (sum(increase({{$currentApdex.Total}}[{{$window}}])) or on() vector(1))
+          (sum(increase(apdex:total:bucket{id="{{$currentApdex.Name}}-{{$currentApdex.System}}-{{$currentApdex.Subsystem}}-apdex-rules"}[{{$window}}])) or on() vector(0))
         labels:
           id: {{$currentApdex.Name}}-{{$currentApdex.System}}-{{$currentApdex.Subsystem}}-apdex-rules
           system: {{$currentApdex.System}}
